@@ -9,57 +9,74 @@ import SwiftUI
 
 struct AddTaskView: View {
     @Environment(\.dismiss) private var dismiss
-    
+
     let onAddTask: (Task) -> Void
+
     @State private var title = ""
     @State private var description = ""
     @State private var dueDate = Date()
-    
+    @State private var hasDueDate = false
+
     var body: some View {
-        Form{
-            
-            Section("Task"){
-                TextField("Task name ",text:$title)
-                
-                TextField("Description",text: $description,axis: .vertical)
-                }
-            
-            Section("Due Date"){
-                
-                DatePicker("Due date" , selection: $dueDate,displayedComponents: [.date,.hourAndMinute])
+        Form {
+            Section("Task Details") {
+                TextField("Task Title", text: $title)
+
+                TextField("Description (Optional)", text: $description, axis: .vertical)
+                    .lineLimit(3...6)
             }
-            
-            
-            Section{
-                Button("Add Task"){
+
+            Section("Due Date") {
+                Toggle("Set Due Date", isOn: $hasDueDate.animation())
+
+                if hasDueDate {
+                    DatePicker(
+                        "Due Date",
+                        selection: $dueDate,
+                        displayedComponents: [.date, .hourAndMinute]
+                    )
+                }
+            }
+        }
+        .navigationTitle("Add Task")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
+            }
+
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Add") {
                     addTask()
                 }
+                .bold()
                 .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
-        
-        .navigationTitle("Add Task")
-        .navigationBarTitleDisplayMode(.inline)
     }
-    
-    
-    private func addTask(){
-        
-//        print("Task: \(title)")
-//        print("Description: \(description)")
-//        print("Due Date: \(dueDate)")
-        
-        
-        let newTask = Task(title: title, description: description)
+
+    private func addTask() {
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitle.isEmpty else { return }
+
+        let trimmedDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
+        let newTask = Task(
+            title: trimmedTitle,
+            description: trimmedDescription,
+            dueDate: hasDueDate ? dueDate : nil
+        )
+
         onAddTask(newTask)
         dismiss()
     }
 }
 
 #Preview {
-    NavigationStack{
-        AddTaskView{
-            task in print(task.title)
+    NavigationStack {
+        AddTaskView { task in
+            print(task.title)
         }
     }
 }
