@@ -16,7 +16,7 @@ struct AddTaskView: View {
     @State private var description = ""
     @State private var dueDate = Date()
     @State private var hasDueDate = false
-
+    @State private var priority: TaskPriority = .p2
     var body: some View {
         Form {
             Section("Task Details") {
@@ -24,6 +24,14 @@ struct AddTaskView: View {
 
                 TextField("Description (Optional)", text: $description, axis: .vertical)
                     .lineLimit(3...6)
+            }
+            
+            Section("Priority"){
+                Picker("Priority" , selection: $priority){
+                    ForEach(TaskPriority.allCases , id: \.self){
+                        priority in Text(priority.title).tag(priority)
+                    }
+                }
             }
 
             Section("Due Date") {
@@ -65,7 +73,8 @@ struct AddTaskView: View {
         let newTask = Task(
             title: trimmedTitle,
             description: trimmedDescription,
-            dueDate: hasDueDate ? dueDate : nil
+            dueDate: hasDueDate ? dueDate : nil,
+            priority: priority
         )
 
         onAddTask(newTask)
