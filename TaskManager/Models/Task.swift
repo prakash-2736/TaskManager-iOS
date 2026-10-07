@@ -7,12 +7,11 @@
 
 import Foundation
 
-
 enum TaskPriority: Int, CaseIterable {
     case p0 = 0
     case p1 = 1
     case p2 = 2
-    
+
     var title: String {
         switch self {
         case .p0:
@@ -31,7 +30,8 @@ struct Task: Identifiable {
     var description: String
     var dueDate: Date?
     var isCompleted: Bool
-    var priority : TaskPriority
+    var priority: TaskPriority
+    var imageData: Data?
 
     init(
         id: UUID = UUID(),
@@ -39,7 +39,8 @@ struct Task: Identifiable {
         description: String = "",
         dueDate: Date? = nil,
         isCompleted: Bool = false,
-        priority : TaskPriority = .p2
+        priority: TaskPriority = .p2,
+        imageData: Data? = nil
     ) {
         self.id = id
         self.title = title
@@ -47,5 +48,6 @@ struct Task: Identifiable {
         self.dueDate = dueDate
         self.isCompleted = isCompleted
         self.priority = priority
+        self.imageData = imageData
     }
 }
