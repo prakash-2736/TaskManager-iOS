@@ -1,21 +1,27 @@
+//
+//  TaskListView.swift
+//  TaskManager
+//
+//  Created by Indukuri Sailaj Prakash on 29/09/26.
+//
+
 import SwiftUI
 
 struct TaskListView: View {
-    
     @State private var tasks: [Task] = []
     @State private var showingAddTask = false
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                
+                // Header Bar
                 HStack {
                     Text("Tasks")
                         .font(.title)
                         .fontWeight(.bold)
-                    
+
                     Spacer()
-                    
+
                     Button {
                         showingAddTask = true
                     } label: {
@@ -26,7 +32,7 @@ struct TaskListView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 12)
                 .padding(.bottom, 8)
-                
+
                 Group {
                     if tasks.isEmpty {
                         emptyStateView
@@ -35,7 +41,7 @@ struct TaskListView: View {
                     }
                 }
             }
-            .navigationBarHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingAddTask) {
                 NavigationStack {
                     AddTaskView { newTask in
@@ -45,9 +51,9 @@ struct TaskListView: View {
             }
         }
     }
-    
+
     // MARK: - Subviews
-    
+
     private var taskList: some View {
         List {
             ForEach(sortedTasks) { task in
@@ -69,41 +75,11 @@ struct TaskListView: View {
         }
         .listStyle(.plain)
     }
-    
-    // MARK: - Sorted Tasks
-    
-    private var sortedTasks: [Task] {
-        tasks.sorted {
-            
-            // Rule 1: Priority comes first
-            if $0.priority.rawValue != $1.priority.rawValue {
-                return $0.priority.rawValue < $1.priority.rawValue
-            }
-            
-            // Rule 2: Within the same priority,
-            // tasks with earlier due dates come first
-            switch ($0.dueDate, $1.dueDate) {
-                
-            case let (date1?, date2?):
-                return date1 < date2
-                
-            case (_?, nil):
-                return true
-                
-            case (nil, _?):
-                return false
-                
-            case (nil, nil):
-                return false
-            }
-        }
-    }
-    
+
     // MARK: - Task Row
-    
+
     private func taskRow(for task: Task) -> some View {
-        HStack(alignment: .top, spacing: 14) {
-            
+        HStack(alignment: .center, spacing: 14) {
             Button {
                 toggleTaskCompletion(task)
             } label: {
@@ -120,36 +96,30 @@ struct TaskListView: View {
                 )
             }
             .buttonStyle(.plain)
-            
+
             VStack(alignment: .leading, spacing: 6) {
-                
-                Text(task.priority.title)
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.orange)
-                
-                Text(task.title)
-                    .font(.headline)
-                    .strikethrough(
-                        task.isCompleted,
-                        color: .secondary
-                    )
-                    .foregroundStyle(
-                        task.isCompleted
-                            ? Color.secondary
-                            : Color.primary
-                    )
-                
-                if !task.description.isEmpty {
-                    Text(task.description)
-                        .font(.subheadline)
-                        .foregroundStyle(Color.secondary)
+                HStack(spacing: 8) {
+                    Text(task.title)
+                        .font(.headline)
+                        .strikethrough(
+                            task.isCompleted,
+                            color: .secondary
+                        )
+                        .foregroundStyle(
+                            task.isCompleted
+                                ? Color.secondary
+                                : Color.primary
+                        )
+
+                    Spacer()
+
+                    priorityBadge(for: task.priority)
                 }
-                
+
                 if let dueDate = task.dueDate {
                     HStack(spacing: 4) {
                         Image(systemName: "calendar")
-                        
+
                         Text(
                             dueDate,
                             format: .dateTime
@@ -165,11 +135,8 @@ struct TaskListView: View {
                             ? Color.secondary
                             : Color.blue
                     )
-                    .padding(.top, 2)
                 }
             }
-            
-            Spacer()
         }
         .padding(14)
         .frame(
@@ -193,36 +160,85 @@ struct TaskListView: View {
                     lineWidth: 1
                 )
         )
+        .overlay(
+            NavigationLink(destination: TaskDetailView(task: binding(for: task))) {
+                EmptyView()
+            }
+            .opacity(0)
+        )
     }
-    
-    // MARK: - Toggle Completion
-    
+
+    private func priorityBadge(for priority: TaskPriority) -> some View {
+        Text(priority.title)
+            .font(.caption2)
+            .fontWeight(.bold)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .foregroundStyle(priorityColor(for: priority))
+            .background(
+                Capsule()
+                    .fill(priorityColor(for: priority).opacity(0.15))
+            )
+    }
+
+    private func priorityColor(for priority: TaskPriority) -> Color {
+        switch priority {
+        case .p0: return .red
+        case .p1: return .orange
+        case .p2: return .blue
+        }
+    }
+
+    // MARK: - Helper Methods
+
+    private func binding(for task: Task) -> Binding<Task> {
+        guard let index = tasks.firstIndex(where: { $0.id == task.id }) else {
+            fatalError("Task not found")
+        }
+        return $tasks[index]
+    }
+
+    private var sortedTasks: [Task] {
+        tasks.sorted {
+            if $0.priority.rawValue != $1.priority.rawValue {
+                return $0.priority.rawValue < $1.priority.rawValue
+            }
+
+            switch ($0.dueDate, $1.dueDate) {
+            case let (date1?, date2?):
+                return date1 < date2
+            case (_?, nil):
+                return true
+            case (nil, _?):
+                return false
+            case (nil, nil):
+                return false
+            }
+        }
+    }
+
     private func toggleTaskCompletion(_ task: Task) {
-        guard let index = tasks.firstIndex(
-            where: { $0.id == task.id }
-        ) else {
+        guard let index = tasks.firstIndex(where: { $0.id == task.id }) else {
             return
         }
-        
+
         withAnimation(.spring(duration: 0.25)) {
             tasks[index].isCompleted.toggle()
         }
     }
-    
-    // MARK: - Delete Tasks
-    
+
     private func deleteTasks(at offsets: IndexSet) {
         let idsToDelete = offsets.map {
             sortedTasks[$0].id
         }
-        
+
         tasks.removeAll { task in
             idsToDelete.contains(task.id)
         }
     }
-    
+
     // MARK: - Empty State
-    
+
     private var emptyStateView: some View {
         ContentUnavailableView {
             Label(
