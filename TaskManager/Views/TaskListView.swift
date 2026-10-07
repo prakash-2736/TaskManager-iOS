@@ -14,6 +14,7 @@ struct TaskListView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+
                 // Header Bar
                 HStack {
                     Text("Tasks")
@@ -42,6 +43,7 @@ struct TaskListView: View {
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
+
             .sheet(isPresented: $showingAddTask) {
                 NavigationStack {
                     AddTaskView { newTask in
@@ -79,7 +81,11 @@ struct TaskListView: View {
     // MARK: - Task Row
 
     private func taskRow(for task: Task) -> some View {
-        HStack(alignment: .center, spacing: 14) {
+        HStack(
+            alignment: .center,
+            spacing: 14
+        ) {
+
             Button {
                 toggleTaskCompletion(task)
             } label: {
@@ -97,7 +103,11 @@ struct TaskListView: View {
             }
             .buttonStyle(.plain)
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(
+                alignment: .leading,
+                spacing: 6
+            ) {
+
                 HStack(spacing: 8) {
                     Text(task.title)
                         .font(.headline)
@@ -113,7 +123,9 @@ struct TaskListView: View {
 
                     Spacer()
 
-                    priorityBadge(for: task.priority)
+                    priorityBadge(
+                        for: task.priority
+                    )
                 }
 
                 if let dueDate = task.dueDate {
@@ -161,73 +173,121 @@ struct TaskListView: View {
                 )
         )
         .overlay(
-            NavigationLink(destination: TaskDetailView(task: binding(for: task))) {
+            NavigationLink(
+                destination: TaskDetailView(
+                    task: binding(for: task)
+                )
+            ) {
                 EmptyView()
             }
             .opacity(0)
         )
     }
 
-    private func priorityBadge(for priority: TaskPriority) -> some View {
+    // MARK: - Priority Badge
+
+    private func priorityBadge(
+        for priority: TaskPriority
+    ) -> some View {
+
         Text(priority.title)
             .font(.caption2)
             .fontWeight(.bold)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .foregroundStyle(priorityColor(for: priority))
+            .foregroundStyle(
+                priorityColor(for: priority)
+            )
             .background(
                 Capsule()
-                    .fill(priorityColor(for: priority).opacity(0.15))
+                    .fill(
+                        priorityColor(
+                            for: priority
+                        )
+                        .opacity(0.15)
+                    )
             )
     }
 
-    private func priorityColor(for priority: TaskPriority) -> Color {
+    private func priorityColor(
+        for priority: TaskPriority
+    ) -> Color {
+
         switch priority {
-        case .p0: return .red
-        case .p1: return .orange
-        case .p2: return .blue
+        case .p0:
+            return .red
+
+        case .p1:
+            return .orange
+
+        case .p2:
+            return .blue
         }
     }
 
     // MARK: - Helper Methods
 
-    private func binding(for task: Task) -> Binding<Task> {
-        guard let index = tasks.firstIndex(where: { $0.id == task.id }) else {
+    private func binding(
+        for task: Task
+    ) -> Binding<Task> {
+
+        guard let index = tasks.firstIndex(
+            where: { $0.id == task.id }
+        ) else {
             fatalError("Task not found")
         }
+
         return $tasks[index]
     }
 
     private var sortedTasks: [Task] {
+
         tasks.sorted {
-            if $0.priority.rawValue != $1.priority.rawValue {
-                return $0.priority.rawValue < $1.priority.rawValue
+            if $0.priority.rawValue !=
+                $1.priority.rawValue {
+
+                return $0.priority.rawValue <
+                    $1.priority.rawValue
             }
 
             switch ($0.dueDate, $1.dueDate) {
+
             case let (date1?, date2?):
                 return date1 < date2
+
             case (_?, nil):
                 return true
+
             case (nil, _?):
                 return false
+
             case (nil, nil):
                 return false
             }
         }
     }
 
-    private func toggleTaskCompletion(_ task: Task) {
-        guard let index = tasks.firstIndex(where: { $0.id == task.id }) else {
+    private func toggleTaskCompletion(
+        _ task: Task
+    ) {
+
+        guard let index = tasks.firstIndex(
+            where: { $0.id == task.id }
+        ) else {
             return
         }
 
-        withAnimation(.spring(duration: 0.25)) {
+        withAnimation(
+            .spring(duration: 0.25)
+        ) {
             tasks[index].isCompleted.toggle()
         }
     }
 
-    private func deleteTasks(at offsets: IndexSet) {
+    private func deleteTasks(
+        at offsets: IndexSet
+    ) {
+
         let idsToDelete = offsets.map {
             sortedTasks[$0].id
         }
@@ -241,11 +301,14 @@ struct TaskListView: View {
 
     private var emptyStateView: some View {
         ContentUnavailableView {
+
             Label(
                 "No Tasks Yet",
                 systemImage: "checkmark.circle"
             )
+
         } description: {
+
             Text(
                 "Tap the + button in the top right to add your first task."
             )
